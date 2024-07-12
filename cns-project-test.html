@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Web Browser Based File Encryption and Decryption</title>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', 'sans-serif';
+            color: black;
+            font-size: 11pt;
+            background-image: url('back.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
+        a,
+        a:link,
+        a:visited,
+        a:active {
+            color: blue;
+            text-decoration: underline;
+        }
+
+        a:hover {
+            cursor: pointer;
+            color: red;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropzone {
+            border: 2px dashed gray;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        .divTable,
+        .divTableRow,
+        .divTableCell {
+            display: block;
+            width: 100%;
+        }
+
+        .divTableRow {
+            margin-bottom: 10px;
+        }
+
+        .divTableCell {
+            margin-bottom: 5px;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .greenText {
+            color: green;
+        }
+
+        .redText {
+            color: red;
+        }
+
+
+        h1 {
+            color: #ff6600;
+        }
+
+        h2 {
+            color: #cc33ff;
+        }
+
+        p {
+            color: #0066ff;
+        }
+
+        .dropzone {
+            border-color: #33cc33;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        button {
+            background-color: #ff4d4d;
+            color: #ffffff;
+        }
+
+        button:hover {
+            background-color: #e60000;
+        }
+
+        a,
+        a:link,
+        a:visited,
+        a:active {
+            color: #cc00cc;
+        }
+
+        a:hover {
+            color: #ff33cc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="divTable">
+            <div class="divTableRow">
+                <div class="divTableCell" style="float: left;">
+                    <h1>Web Browser Based File Encryption and Decryption</h1>
+                </div>
+                <div class="divTableCell" style="float: right;">
+                    <h1>
+                        <button id="btnRefresh" onClick="javascript:location.reload();">Refresh Page</button>
+                        <button id="btnDivEncrypt" onClick="javascript:switchdiv('encrypt');">Encrypt a File</button>
+                        <button id="btnDivDecrypt" onClick="javascript:switchdiv('decrypt');">Decrypt a File</button>
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <hr>
+    </div>
+
+    <div class="container" id="divEncryptfile">
+        <h2>Encrypt a File</h2>
+        <p>To encrypt a file, enter a password and drop the file to be encrypted into the dropzone below. The file will then be encrypted using the password, then you'll be given an opportunity to save the encrypted file to your system.</p>
+
+        <div class="divTable">
+            <div class="divTableRow">
+                <div class="divTableCell">Password</div>
+                <div class="divTableCell"><input id="txtEncpassphrase" type="password" size="30" onkeyup="javascript:encvalidate();" value=""></div>
+                <div class="divTableCell">(minimum length eight characters, make sure it's strong!)</div>
+            </div>
+            <div class="divTableRow">
+                <div class="divTableCell">Password (retype)</div>
+                <div class="divTableCell"><input id="txtEncpassphraseretype" type="password" size="30" onkeyup="javascript:encvalidate();" value=""></div>
+                <div class="divTableCell"><span class="greenText" id="spnCheckretype"></span></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="dropzone" id="encdropzone" ondrop="drop_handler(event);" ondragover="dragover_handler(event);" ondragend="dragend_handler(event);">
+                <p>Drag and drop the file to be encrypted into this dropzone, or click <a onclick="javascript:encfileElem.click();">here</a> to select file.</p>
+                <p><span id="spnencfilename"></span></p>
+            </div>
+            <input type="file" id="encfileElem" style="display:none" onchange="selectfile(this.files)">
+        </div>
+
+        <div class="divTable">
+            <div class="divTableRow">
+                <div class="divTableCell"><button id="btnEncrypt" onclick="javascript:encryptfile();" disabled>Encrypt File</button></div>
+                <div class="divTableCell"><span id="spnEncstatus"></span></div>
+            </div>
+        </div>
+
+        <div>
+            <a id="aEncsavefile" hidden><button>Save Encrypted File</button></a>
+        </div>
+    </div>
+
+    <div class="container" id="divDecryptfile">
+        <h2>Decrypt a File</h2>
+        <p>Decrypt a file using the password that was previously used to encrypt the file. After the file is decrypted, you'll be given an opportunity to save the decrypted file to your system.</p>
+
+        <div class="divTable">
+            <div class="divTableRow">
+                <div class="divTableCell">Password</div>
+                <div class="divTableCell"><input id="txtDecpassphrase" type="password" size="30" onkeyup="javascript:decvalidate();" value=""></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="dropzone" id="decdropzone" ondrop="drop_handler(event);" ondragover="dragover_handler(event);" ondragend="dragend_handler(event);">
+                <p>Drag and drop file to be decrypted into this dropzone, or click <a role="button" onclick="javascript:decfileElem.click();">here</a> to select file.</p>
+                <p><span id="spndecfilename"></span></p>
+            </div>
+            <input type="file" id="decfileElem" style="display:none" onchange="selectfile(this.files)">
+        </div>
+
+        <div class="divTable">
+            <div class="divTableRow">
+                <div class="divTableCell"><button id="btnDecrypt" onclick="javascript:decryptfile();" disabled>Decrypt File</button></div>
+                <div class="divTableCell"><span id="spnDecstatus"></span></div>
+            </div>
+        </div>
+
+        <div>
+            <a id="aDecsavefile" hidden><button>Save Decrypted File</button></a>
+        </div>
+    </div>
+
+    <script>
+        var mode = null;
+        var objFile = null;
+        switchdiv('encrypt');
+
+        function switchdiv(t) {
+            if (t == 'encrypt') {
+                divEncryptfile.style.display = 'block';
+                divDecryptfile.style.display = 'none';
+                btnDivEncrypt.disabled = true;
+                btnDivDecrypt.disabled = false;
+                mode = 'encrypt';
+            } else if (t == 'decrypt') {
+                divEncryptfile.style.display = 'none';
+                divDecryptfile.style.display = 'block';
+                btnDivEncrypt.disabled = false;
+                btnDivDecrypt.disabled = true;
+                mode = 'decrypt';
+            }
+        }
+
+        function encvalidate() {
+            if (txtEncpassphrase.value.length >= 8 && txtEncpassphrase.value == txtEncpassphraseretype.value) {
+                spnCheckretype.classList.add("greenText");
+                spnCheckretype.classList.remove("redText");
+                spnCheckretype.innerHTML = '&#10004;';
+            } else {
+                spnCheckretype.classList.remove("greenText");
+                spnCheckretype.classList.add("redText");
+                spnCheckretype.innerHTML = '&#10006;';
+            }
+
+            if (txtEncpassphrase.value.length >= 8 && txtEncpassphrase.value == txtEncpassphraseretype.value && objFile) {
+                btnEncrypt.disabled = false;
+            } else {
+                btnEncrypt.disabled = true;
+            }
+            
+            if (txtEncpassphrase.value != txtEncpassphraseretype.value) {
+                spnEncstatus.classList.add("redText");
+                spnEncstatus.innerHTML = '<p>Passwords do not match!</p>';
+            } else {
+                spnEncstatus.innerHTML = '';
+            }
+        }
+
+        function decvalidate() {
+            if (txtDecpassphrase.value.length > 0 && objFile) {
+                btnDecrypt.disabled = false;
+            } else {
+                btnDecrypt.disabled = true;
+            }
+        }
+
+        function drop_handler(ev) {
+            console.log("Drop");
+            ev.preventDefault();
+            var dt = ev.dataTransfer;
+            if (dt.items) {
+                for (var i = 0; i < dt.items.length; i++) {
+                    if (dt.items[i].kind == "file") {
+                        var f = dt.items[i].getAsFile();
+                        console.log("... file[" + i + "].name = " + f.name);
+                        objFile = f;
+                    }
+                }
+            } else {
+                for (var i = 0; i < dt.files.length; i++) {
+                    console.log("... file[" + i + "].name = " + dt.files[i].name);
+                }
+                objFile = file[0];
+            }
+            displayfile()
+            if (mode == 'encrypt') {
+                encvalidate();
+            } else if (mode == 'decrypt') {
+                decvalidate();
+            }
+        }
+
+        function dragover_handler(ev) {
+            console.log("dragOver");
+            ev.preventDefault();
+        }
+
+        function dragend_handler(ev) {
+            console.log("dragEnd");
+            var dt = ev.dataTransfer;
+            if (dt.items) {
+                for (var i = 0; i < dt.items.length; i++) {
+                    dt.items.remove(i);
+                }
+            } else {
+                ev.dataTransfer.clearData();
+            }
+        }
+
+        function selectfile(Files) {
+            objFile = Files[0];
+            displayfile()
+            if (mode == 'encrypt') {
+                encvalidate();
+            } else if (mode == 'decrypt') {
+                decvalidate();
+            }
+        }
+
+        function displayfile() {
+            var s;
+            var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            var bytes = objFile.size;
+            var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+            if (i == 0) {
+                s = bytes + ' ' + sizes[i];
+            } else {
+                s = (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+            }
+
+            if (mode == 'encrypt') {
+                spnencfilename.textContent = objFile.name + ' (' + s + ')';
+            } else if (mode == 'decrypt') {
+                spndecfilename.textContent = objFile.name + ' (' + s + ')';
+            }
+        }
+
+        function readfile(file) {
+            return new Promise((resolve, reject) => {
+                var fr = new FileReader();
+                fr.onload = () => {
+                    resolve(fr.result)
+                };
+                fr.readAsArrayBuffer(file);
+            });
+        }
+
+        async function encryptfile() {
+            btnEncrypt.disabled = true;
+            var startTime = new Date().getTime();
+
+            var plaintextbytes = await readfile(objFile)
+                .catch(function(err) {
+                    console.error(err);
+                });
+            var plaintextbytes = new Uint8Array(plaintextbytes);
+
+            var pbkdf2iterations = 10000;
+            var passphrasebytes = new TextEncoder("utf-8").encode(txtEncpassphrase.value);
+            var pbkdf2salt = window.crypto.getRandomValues(new Uint8Array(8));
+
+            var passphrasekey = await window.crypto.subtle.importKey('raw', passphrasebytes, {
+                    name: 'PBKDF2'
+                }, false, ['deriveBits'])
+                .catch(function(err) {
+                    console.error(err);
+                });
+            console.log('passphrasekey imported');
+
+            var pbkdf2bytes = await window.crypto.subtle.deriveBits({
+                    "name": 'PBKDF2',
+                    "salt": pbkdf2salt,
+                    "iterations": pbkdf2iterations,
+                    "hash": 'SHA-256'
+                }, passphrasekey, 384)
+                .catch(function(err) {
+                    console.error(err);
+                });
+            console.log('pbkdf2bytes derived');
+            pbkdf2bytes = new Uint8Array(pbkdf2bytes);
+
+            keybytes = pbkdf2bytes.slice(0, 32);
+            ivbytes = pbkdf2bytes.slice(32);
+
+            var key = await window.crypto.subtle.importKey('raw', keybytes, {
+                    name: 'AES-CBC',
+                    length: 256
+                }, false, ['encrypt'])
+                .catch(function(err) {
+                    console.error(err);
+                });
+            console.log('key imported');
+
+            var cipherbytes = await window.crypto.subtle.encrypt({
+                    name: "AES-CBC",
+                    iv: ivbytes
+                }, key, plaintextbytes)
+                .catch(function(err) {
+                    console.error(err);
+                });
+
+            if (!cipherbytes) {
+                spnEncstatus.classList.add("redText");
+                spnEncstatus.innerHTML = '<p>Error encrypting file.  See console log.</p>';
+                return;
+            }
+
+            console.log('plaintext encrypted');
+            cipherbytes = new Uint8Array(cipherbytes);
+
+            var resultbytes = new Uint8Array(cipherbytes.length + 16)
+            resultbytes.set(new TextEncoder("utf-8").encode('Salted__'));
+            resultbytes.set(pbkdf2salt, 8);
+            resultbytes.set(cipherbytes, 16);
+
+            var blob = new Blob([resultbytes], {
+                type: 'application/download'
+            });
+            var blobUrl = URL.createObjectURL(blob);
+            aEncsavefile.href = blobUrl;
+            aEncsavefile.download = objFile.name + '.enc';
+
+            var endTime = new Date().getTime();
+            var timeTaken = endTime - startTime;
+            spnEncstatus.classList.add("greenText");
+            spnEncstatus.innerHTML = '<p>File encrypted. Time taken: ' + timeTaken + ' milliseconds</p>';
+            aEncsavefile.hidden = false;
+        }
+
+        async function decryptfile() {
+            btnDecrypt.disabled = true;
+            var startTime = new Date().getTime();
+
+            var cipherbytes = await readfile(objFile)
+                .catch(function(err) {
+                    console.error(err);
+                });
+            var cipherbytes = new Uint8Array(cipherbytes);
+
+            var pbkdf2iterations = 10000;
+            var passphrasebytes = new TextEncoder("utf-8").encode(txtDecpassphrase.value);
+            var pbkdf2salt = cipherbytes.slice(8, 16);
+
+
+            var passphrasekey = await window.crypto.subtle.importKey('raw', passphrasebytes, {
+                    name: 'PBKDF2'
+                }, false, ['deriveBits'])
+                .catch(function(err) {
+                    console.error(err);
+
+                });
+            console.log('passphrasekey imported');
+
+            var pbkdf2bytes = await window.crypto.subtle.deriveBits({
+                    "name": 'PBKDF2',
+                    "salt": pbkdf2salt,
+                    "iterations": pbkdf2iterations,
+                    "hash": 'SHA-256'
+                }, passphrasekey, 384)
+                .catch(function(err) {
+                    console.error(err);
+                });
+            console.log('pbkdf2bytes derived');
+            pbkdf2bytes = new Uint8Array(pbkdf2bytes);
+
+            keybytes = pbkdf2bytes.slice(0, 32);
+            ivbytes = pbkdf2bytes.slice(32);
+            cipherbytes = cipherbytes.slice(16);
+
+            var key = await window.crypto.subtle.importKey('raw', keybytes, {
+                    name: 'AES-CBC',
+                    length: 256
+                }, false, ['decrypt'])
+                .catch(function(err) {
+                    console.error(err);
+                });
+            console.log('key imported');
+
+            var plaintextbytes = await window.crypto.subtle.decrypt({
+                    name: "AES-CBC",
+                    iv: ivbytes
+                }, key, cipherbytes)
+                .catch(function(err) {
+                    console.error(err);
+                });
+
+            if (!plaintextbytes) {
+                spnDecstatus.classList.add("redText");
+                spnDecstatus.innerHTML = '<p>Error decrypting file.  Password may be incorrect.</p>';
+                return;
+            }
+
+            console.log('ciphertext decrypted');
+            plaintextbytes = new Uint8Array(plaintextbytes);
+
+            var originalFileName = objFile.name; // Get the original file name
+            var decryptedFileName = originalFileName.replace('.enc', ''); // Remove the .enc extension
+
+            var blob = new Blob([plaintextbytes], {
+                type: 'application/download'
+            });
+            var blobUrl = URL.createObjectURL(blob);
+            aDecsavefile.href = blobUrl;
+            aDecsavefile.download = decryptedFileName; // Set the download attribute to the updated file name
+
+            var endTime = new Date().getTime();
+            var timeTaken = endTime - startTime;
+            spnDecstatus.classList.add("greenText");
+            spnDecstatus.innerHTML = '<p>File decrypted. Time taken: ' + timeTaken + ' milliseconds</p>';
+            aDecsavefile.hidden = false;
+        }
+    </script>
+</body>
+
+</html>
